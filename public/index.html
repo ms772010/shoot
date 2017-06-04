@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hello World</title>
+  
+</head>
+  <script src="pixi.min.js"></script>
+  <style type="text/css">
+body {cursor: none}
+</style>
+<body>
+
+  <script type="text/javascript">
+
+    var type = "WebGL"
+    if(!PIXI.utils.isWebGLSupported()){
+      type = "canvas"
+    }
+
+    PIXI.utils.sayHello(type)
+    //Aliases
+	var Container = PIXI.Container,
+	    autoDetectRenderer = PIXI.autoDetectRenderer,
+	    loader = PIXI.loader,
+	    resources = PIXI.loader.resources,
+	    Sprite = PIXI.Sprite;
+	    TextureCache=PIXI.utils.TextureCache
+    //Create the renderer
+    var renderer = autoDetectRenderer(960, 540);
+    //Create a container object called the `stage`
+    var stage = new Container();
+	  //Add the canvas to the HTML document
+    document.body.appendChild(renderer.view);
+    //Use Pixi's built-in `loader` object to load an image
+    var cat;
+    var bg2;
+    var state = play;
+    var numberOfWoman=10;
+    womanss=[];
+    var womandead;
+    var message;
+    var killint=0;
+    loader
+    .add(["images/cat.png","images/bg2.png","images/woman.png","images/man.png","images/womandead.png","images/mandead.png"])
+    .on("progress", loadProgressHandler)
+    .load(setup);
+	function loadProgressHandler(loader, resource) {
+
+	  //Display the file `url` currently being loaded
+	  console.log("loading: " + resource.url); 
+
+	  //Display the precentage of files currently loaded
+	  console.log("progress: " + loader.progress + "%"); 
+
+	  //If you gave your files names as the first argument 
+	  //of the `add` method, you can access them like this
+	  //console.log("loading: " + resource.name);
+	}
+    //This `setup` function will run when the image has loaded
+
+    function setup() {
+	    console.log("All files loaded");
+
+	    //Create the `cat` sprite from the texture
+	    cat = new Sprite(resources["images/cat.png"].texture);
+	    bg2 = new Sprite(resources["images/bg2.png"].texture);
+	    var texture=TextureCache["images/woman.png"];
+	    var rectangle=new PIXI.Rectangle(64,48,32,48);
+	    texture.frame=rectangle;
+	    var texture2=TextureCache["images/womandead.png"];
+	    var rectangle2=new PIXI.Rectangle(128,128,64,64);
+	    texture2.frame=rectangle2;
+	    var spacing = 48,
+	    	xOffset = 150,
+	    	speed = 2,
+   	 		direction = 1;
+	    womandead=new Sprite(texture2);
+	    message = new PIXI.Text(
+  		"kills:",
+ 		 {fontFamily: "Arial", fontSize: 32, fill: "black"}
+		);
+
+		message.position.set(30, 30);
+		
+	    stage.addChild(bg2);
+	    stage.addChild(message);
+	    for(var i = 0; i < numberOfWoman; i++)
+	    {
+	    	var woman=new Sprite(texture);
+	    	woman.interactive=true;
+	    	var x = spacing * i + xOffset;
+	    	var y = parseInt((stage.height-woman.height)*Math.random());
+	    	woman.x=x;
+	    	woman.y=y;
+	    	woman.vx=4;
+
+	    	womanss.push(woman);
+	    	stage.addChild(woman);
+	    }
+	    bg2.interactive = true;
+	    cat.visible=false;
+	    womandead.visible=false;
+	    
+	    
+	    stage.addChild(cat);
+	    
+	    
+	   gameLoop();
+	  	
+	    
+  	}
+  	function gameLoop()
+  	{
+  		requestAnimationFrame(gameLoop);
+  		state();
+  		 bg2.on('mousemove',onPointerMove)
+	    .on('touchmove', onPointerMove);
+	    //Render the stage 
+		    function onPointerMove(eventData)
+
+	  	{
+	  		cat.visible=true;
+	  		cat.position.set(eventData.data.global.x-16,eventData.data.global.y-16);
+
+	  	}
+	  	womanss.forEach(function(woman){
+	  		woman.on('click',onClick);
+	  		function onClick(eventData)
+	  		{
+
+	  			woman.visible=false;
+	  			womandead.position.set(woman.x,woman.y);
+	  			womandead.visible=true;
+	  			killint+=1;
+	  			message.text="kills:"+killint.toString();
+	  		}
+	  	})
+  		renderer.render(stage);
+  	}
+  	function play()
+  	{
+  		womanss.forEach(function(woman){
+	  		woman.x+=woman.vx;
+	  		var womanHitsWall = contain(woman, {x: 0, y:0, width: 960, height: 540});
+	  		if(womanHitsWall==="left"||womanHitsWall==="right"){
+	  			woman.vx*=-1;
+	  		}
+  		
+  		})
+
+  	}
+
+	function contain(sprite, container) 
+	{
+
+	  var collision = undefined;
+
+		  //Left
+		  if (sprite.x < container.x) {
+		    sprite.x = container.x;
+		    collision = "left";
+		  }
+
+		  //Top
+		  if (sprite.y < container.y) {
+		    sprite.y = container.y;
+		    collision = "top";
+		  }
+
+		  //Right
+		  if (sprite.x + sprite.width > container.width) {
+		    sprite.x = container.width - sprite.width;
+		    collision = "right";
+		  }
+
+		  //Bottom
+		  if (sprite.y + sprite.height > container.height) {
+		    sprite.y = container.height - sprite.height;
+		    collision = "bottom";
+		  }
+
+		  //Return the `collision` value
+		  return collision;
+	}
+  </script>
+</body>
+</html>
